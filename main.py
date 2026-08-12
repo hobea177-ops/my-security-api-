@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 # ضع مفتاحك الخاص بـ Gemini بين التنصيص
-GEMINI_API_KEY = "AQ.Ab8RN6LKZ-tOduHY8Y3N-cYp3xztd1mmPrG62fvfYmysTL6dLQ"
+GEMINI_API_KEY = "AQ.Ab8RN6KbvCq-w63p_XZa5xN2iPJzR5twFFqFc1UJOkgvvvSkGA"
 
 class AuditRequest(BaseModel):
     url: str
