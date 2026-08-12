@@ -2,13 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from google import genai
 import urllib.parse
 import os
-import requests
 
 app = FastAPI(title="CyberShield AI Ultra Security Engine")
 
-# تفعيل CORS للتواصل الفعال مع الواجهة
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,19 +16,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ضع مفتاح الـ API الخاص بك هنا بين التنصيص
+GEMINI_API_KEY =" AQ.Ab8RN6LScEY1R2APHakze6QEpSlWGYQCUIjVwAo0x1L_4IFotA "
+
+# إعداد عميل الذكاء الاصطناعي الحقيقي
+client = genai.Client(api_key=GEMINI_API_KEY)
+
 class AuditRequest(BaseModel):
     url: str
 
 class AIAnalysisRequest(BaseModel):
     query: str
 
-# 1. محرك الفحص والتحليل الأمني للروابط
 @app.post("/api/audit")
 async def audit_target(data: AuditRequest):
     try:
         parsed_url = urllib.parse.urlparse(data.url)
         domain = parsed_url.netloc or parsed_url.path.split('/')[0]
-        
         is_https = data.url.startswith("https://")
         suspicious_keywords = ["login", "verify", "bank", "free", "mod", "happy", "update", "account", "apk"]
         has_suspicious_words = any(word in data.url.lower() for word in suspicious_keywords)
@@ -57,40 +60,26 @@ async def audit_target(data: AuditRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# 2. مستشار الأمن السيبراني الذكي والخارق (Cyber AI Core)
+# 🤖 الذكاء الاصطناعي الحقيقي المتغير والذكي 100%
 @app.post("/api/ai-consultant")
 async def ai_consultant(data: AIAnalysisRequest):
-    prompt = f"""
-    أنت مستشار وأستاذ خبير في الأمن السيبراني (Cybersecurity & Penetration Testing Specialist).
-    أجب على هذا الاستفسار التقني بأسلوب احترافي، دقيق، ومنظم، مدعوماً بالخطوات التقنية ونقاط الوقاية والتحليل الأمني الذكي.
-    
-    سؤال المستخدم: {data.query}
-    """
-    
-    # محرك معالجة واستجابة للذكاء الاصطناعي الذاتي والتحليلي
     try:
-        # استجابة متطورة تحلل الاستفسارات الهندسية والأمنية بدقة
-        query_clean = data.query.strip().lower()
+        system_instruction = (
+            "أنت مستشار وخبير أمن سيبراني واختبار اختراق احترافي. "
+            "أجب عن سؤال المستخدم بشكل دقيق، مفصل، وذكائي مخصص تماماً لسؤاله. "
+            "إذا كان السؤال يتعلق بمحاولة اختراق أو استفسار تعليمي أمني، اشرح الجانب الأمني والوقائي بأسلوب تقني مميز."
+        )
         
-        # تحليل استجابة الذكاء الاصطناعي
-        response_text = f"🧠 **تحليل مستشار الأمن السيبراني الذكي:**\n\n"
-        response_text += f"بناءً على طلبك المتعلق بـ: **'{data.query}'**\n\n"
+        # إرسال السؤال الحقيقي لنموذج Gemini 2.5 Flash
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=f"{system_instruction}\n\nسؤال المستخدم: {data.query}"
+        )
         
-        response_text += "🔍 **المنظور الفني والأمني:**\n"
-        response_text += "يتطلب هذا الاستفسار مراجعة دقيقة لآليات الحماية واختبار الاختراق الهيكلي وفق معايير OWASP وNIST.\n\n"
-        
-        response_text += "🛠️ **خطوات التحليل والتنفيذ الأمني:**\n"
-        response_text += "1. **فحص المدخلات والحدود (Sanitization & Validation):** التحقق من سلامة كافة البيانات لتجنب الثغرات مثل Injection و XSS.\n"
-        response_text += "2. **إدارة الصلاحيات (Principle of Least Privilege):** تقييد الأذونات للتأكد من عدم وصول أي طرف غير مصرح له للبيانات.\n"
-        response_text += "3. **التشفير والمراقبة (Encryption & Logging):** استخدام تشفير TLS/AES ومراقبة السجلات للكشف عن أي سلوك مشبوه.\n\n"
-        
-        response_text += "💡 **توصية الخبير:**\n"
-        response_text += "تأكد دائماً من إجراء فحص دوري للمنافس والخدمات المفتوحة واستخدام أدوات تحليل الثغرات التلقائية لضمان أعلى مستويات الأمان."
-
-        return {"query": data.query, "ai_response": response_text}
+        return {"query": data.query, "ai_response": response.text}
         
     except Exception as e:
-        return {"query": data.query, "ai_response": f"حدث خطأ في معالجة طلب الذكاء الاصطناعي: {str(e)}"}
+        return {"query": data.query, "ai_response": f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {str(e)}"}
 
 @app.get("/")
 async def read_index():
