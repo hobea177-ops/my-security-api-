@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from google import genai
+import google.generativeai as genai
 import urllib.parse
 import os
 
@@ -16,11 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ضع مفتاح الـ API الخاص بك هنا بين التنصيص
-GEMINI_API_KEY =" AQ.Ab8RN6LScEY1R2APHakze6QEpSlWGYQCUIjVwAo0x1L_4IFotA "
-
-# إعداد عميل الذكاء الاصطناعي الحقيقي
-client = genai.Client(api_key=GEMINI_API_KEY)
+# وضع المفتاح وتهيئته مباشرة
+GEMINI_API_KEY = "AQ.Ab8RN6Kkoq6wc-lA9cWZiGMrJfjnvdSDKM2J1hh3zeMdbQL13w"
+genai.configure(api_key=GEMINI_API_KEY)
 
 class AuditRequest(BaseModel):
     url: str
@@ -60,22 +58,19 @@ async def audit_target(data: AuditRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# 🤖 الذكاء الاصطناعي الحقيقي المتغير والذكي 100%
 @app.post("/api/ai-consultant")
 async def ai_consultant(data: AIAnalysisRequest):
     try:
-        system_instruction = (
+        # استخدام نموذج gemini-1.5-flash المتوافق مع API Key المباشر
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        
+        prompt = (
             "أنت مستشار وخبير أمن سيبراني واختبار اختراق احترافي. "
-            "أجب عن سؤال المستخدم بشكل دقيق، مفصل، وذكائي مخصص تماماً لسؤاله. "
-            "إذا كان السؤال يتعلق بمحاولة اختراق أو استفسار تعليمي أمني، اشرح الجانب الأمني والوقائي بأسلوب تقني مميز."
+            "أجب عن سؤال المستخدم بشكل دقيق ومفصل ومخصص تماماً لسؤاله باللغة العربية.\n\n"
+            f"سؤال المستخدم: {data.query}"
         )
         
-        # إرسال السؤال الحقيقي لنموذج Gemini 2.5 Flash
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=f"{system_instruction}\n\nسؤال المستخدم: {data.query}"
-        )
-        
+        response = model.generate_content(prompt)
         return {"query": data.query, "ai_response": response.text}
         
     except Exception as e:
