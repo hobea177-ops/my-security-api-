@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import google.generativeai as genai
+import requests
 import urllib.parse
 import os
 
@@ -16,9 +16,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# وضع المفتاح وتهيئته مباشرة
-GEMINI_API_KEY = "AQ.Ab8RN6Kkoq6wc-lA9cWZiGMrJfjnvdSDKM2J1hh3zeMdbQL13w"
-genai.configure(api_key=GEMINI_API_KEY)
+# ضع مفتاحك الخاص بـ Gemini بين التنصيص
+GEMINI_API_KEY = "AQ.Ab8RN6LKZ-tOduHY8Y3N-cYp3xztd1mmPrG62fvfYmysTL6dLQ"
 
 class AuditRequest(BaseModel):
     url: str
@@ -58,21 +57,36 @@ async def audit_target(data: AuditRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# 🤖 الاتصال المباشر بالذكاء الاصطناعي عبر HTTP REST API
 @app.post("/api/ai-consultant")
 async def ai_consultant(data: AIAnalysisRequest):
     try:
-        # استخدام نموذج gemini-1.5-flash المتوافق مع API Key المباشر
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
         
-        prompt = (
+        prompt_text = (
             "أنت مستشار وخبير أمن سيبراني واختبار اختراق احترافي. "
             "أجب عن سؤال المستخدم بشكل دقيق ومفصل ومخصص تماماً لسؤاله باللغة العربية.\n\n"
             f"سؤال المستخدم: {data.query}"
         )
         
-        response = model.generate_content(prompt)
-        return {"query": data.query, "ai_response": response.text}
+        payload = {
+            "contents": [{
+                "parts": [{"text": prompt_text}]
+            }]
+        }
         
+        headers = {"Content-Type": "application/json"}
+        
+        response = requests.post(url, json=payload, headers=headers)
+        res_data = response.json()
+        
+        if response.status_code == 200 and "candidates" in res_data:
+            ai_text = res_data["candidates"][0]["content"]["parts"][0]["text"]
+            return {"query": data.query, "ai_response": ai_text}
+        else:
+            error_msg = res_data.get("error", {}).get("message", "خطأ غير معروف في الاستجابة")
+            return {"query": data.query, "ai_response": f"خطأ من سيرفر الذكاء الاصطناعي: {error_msg}"}
+            
     except Exception as e:
         return {"query": data.query, "ai_response": f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {str(e)}"}
 
