@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberShield AI - منصة الأمن السيبراني المتكاملة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: system-ui, -apple-system, sans-serif; }
+        .cyber-border { border: 1px solid #30363d; }
+        .cyber-card { background: #161b22; border-radius: 12px; }
+        .glow-green { box-shadow: 0 0 15px rgba(46, 160, 67, 0.4); }
+        .glow-cyan { box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-gray-800 bg-[#161b22] p-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-cyan-400 text-2xl"></i>
+                <h1 class="text-xl font-bold text-white tracking-wide">CyberShield <span class="text-cyan-400">AI</span></h1>
+            </div>
+            <span class="bg-green-900/50 text-green-400 text-xs px-3 py-1 rounded-full border border-green-700">
+                <i class="fa-solid fa-circle text-[8px] animate-pulse"></i> النظام مباشر
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 w-full flex-grow space-y-8">
+
+        <!-- Banner -->
+        <div class="cyber-card p-6 border-l-4 border-cyan-500 glow-cyan">
+            <h2 class="text-2xl font-bold text-white mb-2">🛡️ منصة التحليل والاختبار الأمني الذكية</h2>
+            <p class="text-gray-400 text-sm">افحص الروابط، حلل الثغرات، واستعن بذكاء حارس الأمن السيبراني الاصطناعي مجاناً.</p>
+        </div>
+
+        <!-- Section 1: Target Scanner -->
+        <section class="cyber-card p-6 cyber-border">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-[#38bdf8] fa-magnifying-glass text-cyan-400"></i>
+                <h3 class="text-lg font-bold text-white">مركز فحص التهديدات والروابط</h3>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="targetUrl" placeholder="أدخل رابط الموقع للتفتيش الأمن والتحليل (مثال: https://target.com)" 
+                       class="flex-grow bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-400">
+                <button onclick="runAudit()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-bolt"></i> بدء الفحص
+                </button>
+            </div>
+
+            <!-- Audit Results Display -->
+            <div id="auditResult" class="hidden mt-6 p-4 rounded-lg bg-[#0d1117] border border-gray-800 space-y-3"></div>
+        </section>
+
+        <!-- Section 2: AI Security Consultant -->
+        <section class="cyber-card p-6 cyber-border">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-brain text-purple-400"></i>
+                <h3 class="text-lg font-bold text-white">مستشار الأمن السيبراني الذكي (Cyber AI)</h3>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="aiQuery" placeholder="اسأل الذكاء الاصطناعي عن أي ثغرة (SQLi, XSS, Phishing...)" 
+                       class="flex-grow bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-400">
+                <button onclick="askAI()" class="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-robot"></i> تحليل AI
+                </button>
+            </div>
+
+            <!-- AI Response Display -->
+            <div id="aiResult" class="hidden mt-6 p-4 rounded-lg bg-[#0d1117] border border-gray-800 text-gray-200 leading-relaxed"></div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 bg-[#161b22] py-4 text-center text-xs text-gray-500">
+        CyberShield AI Engine &copy; 2026 - نظام اختبارات الأمن السيبراني المتقدم
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        async function runAudit() {
+            const urlInput = document.getElementById('targetUrl').value;
+            const resDiv = document.getElementById('auditResult');
+            if(!urlInput) return alert('يرجى إدخال الرابط أولاً!');
+
+            resDiv.classList.remove('hidden');
+            resDiv.innerHTML = '<p class="text-cyan-400 animate-pulse"><i class="fa-solid fa-spinner fa-spin"></i> جاري فحص الهدف والتحقق من الهيدرات والشهادات Security Matrix...</p>';
+
+            try {
+                const response = await fetch('/api/audit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+                const data = await response.json();
+                
+                let badgeColor = data.risk_score < 30 ? 'text-green-400 border-green-500' : 'text-red-400 border-red-500';
+
+                resDiv.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                        <span class="font-bold text-white">الهدف: ${data.domain}</span>
+                        <span class="px-3 py-1 rounded border text-xs font-bold ${badgeColor}">مستوى الخطورة: ${data.risk_score}/100</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-3">
+                        <div><strong class="text-gray-400">البروتوكول:</strong> ${data.protocol}</div>
+                        <div><strong class="text-gray-400">حالة التشفير SSL:</strong> ${data.threat_analysis.ssl_status}</div>
+                        <div><strong class="text-gray-400">خطر التصيد الاحتيالي:</strong> ${data.threat_analysis.phishing_risk}</div>
+                        <div><strong class="text-gray-400">هيكل الرابط:</strong> ${data.threat_analysis.malware_vector}</div>
+                    </div>
+                    <div class="mt-3 p-3 bg-gray-900 rounded text-xs text-yellow-300">
+                        💡 <strong>توصية النظام:</strong> ${data.recommended_action}
+                    </div>
+                `;
+            } catch (err) {
+                resDiv.innerHTML = '<p class="text-red-500">حدث خطأ أثناء الاتصال بالخادم.</p>';
+            }
+        }
+
+        async function askAI() {
+            const queryInput = document.getElementById('aiQuery').value;
+            const aiDiv = document.getElementById('aiResult');
+            if(!queryInput) return alert('اكتب سؤالك الأمني أولاً!');
+
+            aiDiv.classList.remove('hidden');
+            aiDiv.innerHTML = '<p class="text-purple-400 animate-pulse"><i class="fa-solid fa-brain fa-spin"></i> الذكاء الاصطناعي يحلل طلبك الآن...</p>';
+
+            try {
+                const response = await fetch('/api/ai-consultant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: queryInput })
+                });
+                const data = await response.json();
+                
+                aiDiv.innerHTML = `
+                    <div class="whitespace-pre-line">${data.ai_response}</div>
+                `;
+            } catch (err) {
+                aiDiv.innerHTML = '<p class="text-red-500">حدث خطأ أثناء معالجة الاستفسار.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
